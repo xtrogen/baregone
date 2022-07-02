@@ -14,13 +14,13 @@ type EnterPosition func(tradeType TradeType)
 type ExitPosition func()
 
 type AnalysePositionArgs struct {
-	bar          BarData
+	bar          *BarData
 	position     Position
 	exitPosition ExitPosition
 }
 
 type OnMarketTickArgs struct {
-	bar           BarData
+	bar           *BarData
 	enterPosition EnterPosition
 }
 

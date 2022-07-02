@@ -1,23 +1,23 @@
 package baregone
 
 import (
-	"fmt"
+	"log"
 	"time"
 
-	lop "github.com/samber/lo/parallel"
+	lop "github.com/samber/lo"
 )
 
-type Backtest struct {
+type BacktestArgs struct {
 	marketData []BarData
 	option     BackTestOptions
 	strategy   Strategy
 }
 
-func (args Backtest) backtest() BacktestContext {
+func Backtest(args BacktestArgs) BacktestContext {
 	strategy := args.strategy
-	isDebug := args.option.debug || false
+	isDebug := args.option.debug
 	prices := args.marketData
-	initCapital := args.option.capital || 1000
+	initCapital := args.option.capital
 
 	position := &Position{}
 	currentBar := &BarData{}
@@ -27,9 +27,9 @@ func (args Backtest) backtest() BacktestContext {
 		capital: initCapital,
 	}
 
-	log := func(str string, others ...int) {
+	logger := func(str string, others ...int) {
 		if isDebug {
-			fmt.Printf(str, others...)
+			log.Print(str, others)
 		}
 	}
 
@@ -57,13 +57,13 @@ func (args Backtest) backtest() BacktestContext {
 
 	}
 
-	recordPosition := func() {
+	recordPosition := func(bar *BarData, position *Position) {
 		tradeType := position.tradeType
 
 		// profitToSave, profitPercentage
 		profitToSave := 0
 		profitPercentage := 0
-		closePrice := currentBar.close
+		closePrice := bar.close
 		entryPrice := position.entryPrice
 		if tradeType == "SELL" {
 			profitPercentage = GetPercentageGain(closePrice, entryPrice)
@@ -73,18 +73,18 @@ func (args Backtest) backtest() BacktestContext {
 			profitToSave = closePrice - entryPrice
 		}
 
-		log("profitPercentage     ------------>", profitPercentage)
-		log("profitToSave         ------------>", profitToSave)
+		logger("profitPercentage     ------------>", profitPercentage)
+		logger("profitToSave         ------------>", profitToSave)
 		position.SetProfit(profitToSave)
 		position.SetProfitPct(profitPercentage)
 	}
 
 	exitPosition := func() {
 		if !position.isOpen {
-			log("Position is not open")
+			logger("Position is not open")
 		}
 
-		recordPosition()
+		recordPosition(currentBar, position)
 		entryPrice := position.entryPrice
 		exitTime := currentBar.date
 		closePrice := currentBar.close
@@ -100,7 +100,7 @@ func (args Backtest) backtest() BacktestContext {
 		position.SetIsOpen(false)
 		position.SetProfitAmount(profitOfCapitalAmount)
 
-		log(`CLOSE ---> ${profit}`, profitOfCapitalAmount)
+		logger(`CLOSE ---> ${profit}`, profitOfCapitalAmount)
 
 		context.trades = append(context.trades, *position)
 
@@ -136,11 +136,11 @@ func (args Backtest) backtest() BacktestContext {
 	}
 
 	for _, price := range prices {
-		currentBar := price
+		currentBar = &price
 		isOpen := position.isOpen
 
 		if isOpen {
-			recordPosition()
+			recordPosition(currentBar, position)
 			strategy.analysePosition(AnalysePositionArgs{bar: currentBar, position: *position, exitPosition: exitPosition})
 		} else {
 			strategy.onMarketTick(OnMarketTickArgs{bar: currentBar, enterPosition: enterPosition})

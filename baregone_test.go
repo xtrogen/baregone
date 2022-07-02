@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"strconv"
 	"testing"
 	"time"
@@ -56,7 +57,12 @@ func TestBacktest(t *testing.T) {
 			analysePosition: func(args AnalysePositionArgs) {
 				// log.Print("analysePosition ----------------", args.bar.close)
 
-				// log.Print("analysePosition ----------------", args.position.tradeType)
+				log.Print("analysePosition ----------------", args.position.tradeType)
+
+				if args.position.profit <= 0 {
+					log.Print("----------------closing position ----------------")
+					args.exitPosition()
+				}
 
 			},
 			onMarketTick: func(args OnMarketTickArgs) {
@@ -70,5 +76,7 @@ func TestBacktest(t *testing.T) {
 
 	results := Backtest(backtestArgs)
 
-	fmt.Print("results", results)
+	fmt.Println("totalTrades ---------------------------", results.totalTrades)
+	fmt.Println("profit --------------------------------", results.profit)
+	fmt.Println("profit --------------------------------", results.trades)
 }

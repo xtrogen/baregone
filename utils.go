@@ -31,14 +31,6 @@ type BacktestContext struct {
  * @param endPrice
  */
 func GetPercentageGain(startPrice int, endPrice int) int {
-	if startPrice <= 0 {
-		return 0
-	}
-
-	if endPrice <= 0 {
-		return 0
-	}
-
 	return (endPrice - startPrice) / startPrice * 100
 }
 
@@ -49,15 +41,6 @@ func GetPercentageGain(startPrice int, endPrice int) int {
  * @param capital
  */
 func GetTotalProfitAmount(start int, end int, capital int) int {
-	// TODO remove
-	if start <= 0 {
-		return 0
-	}
-
-	if end <= 0 {
-		return 0
-	}
-
 	profit := end - start
 	return (profit / start) * capital
 }

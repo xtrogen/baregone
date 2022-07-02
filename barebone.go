@@ -1,6 +1,11 @@
 package baregone
 
-import "time"
+import (
+	"fmt"
+	"time"
+
+	lop "github.com/samber/lo/parallel"
+)
 
 type Backtest struct {
 	marketData []BarData
@@ -12,11 +17,22 @@ func (args Backtest) backtest() {
 	strategy := args.strategy
 	isDebug := args.option.debug || false
 	prices := args.marketData
-	capital := args.option.capital || 1000
+	initCapital := args.option.capital || 1000
 	totalPrices := len(prices)
 
 	position := &Position{}
 	currentBar := &BarData{}
+
+	context := &BacktestContext{
+		trades:  nil,
+		capital: initCapital,
+	}
+
+	log := func(str string, others ...int) {
+		if isDebug {
+			fmt.Printf(str, others...)
+		}
+	}
 
 	refreshVariables := func() {
 
@@ -58,17 +74,31 @@ func (args Backtest) backtest() {
 			profitToSave = closePrice - entryPrice
 		}
 
+		log("profitPercentage     ------------>", profitPercentage)
+		log("profitToSave         ------------>", profitToSave)
 		position.SetProfit(profitToSave)
 		position.SetProfitPct(profitPercentage)
-	}
-
-	finishTrading := func() {
 	}
 
 	exitPosition := func() {
 	}
 
 	enterPosition := func(tradeType TradeType) {
+	}
+
+	finishTrading := func() BacktestContext {
+		if position.isOpen {
+			exitPosition()
+		}
+
+		return BacktestContext{
+			trades:  context.trades,
+			capital: context.capital,
+			profit: lop.SumBy(context.trades, func(trade Position) int {
+				return trade.profit
+			}),
+			totalTrades: len(context.trades),
+		}
 	}
 
 	for _, price := range prices {

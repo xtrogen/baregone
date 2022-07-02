@@ -21,3 +21,13 @@ type BacktestContext struct {
 	profit      int        `json:"profit,omitempty"`
 	totalTrades int        `json:"total_trades,omitempty"`
 }
+
+/**
+ * Get Profit percentage gained
+ * https://www.investopedia.com/ask/answers/how-do-you-calculate-percentage-gain-or-loss-investment/
+ * @param startPrice
+ * @param endPrice
+ */
+func GetPercentageGain(startPrice int, endPrice int) int {
+	return (endPrice - startPrice) / startPrice * 100
+}

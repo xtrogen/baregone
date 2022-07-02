@@ -13,12 +13,11 @@ type Backtest struct {
 	strategy   Strategy
 }
 
-func (args Backtest) backtest() {
+func (args Backtest) backtest() BacktestContext {
 	strategy := args.strategy
 	isDebug := args.option.debug || false
 	prices := args.marketData
 	initCapital := args.option.capital || 1000
-	totalPrices := len(prices)
 
 	position := &Position{}
 	currentBar := &BarData{}
@@ -81,9 +80,44 @@ func (args Backtest) backtest() {
 	}
 
 	exitPosition := func() {
+		if !position.isOpen {
+			log("Position is not open")
+		}
+
+		recordPosition()
+		entryPrice := position.entryPrice
+		exitTime := currentBar.date
+		closePrice := currentBar.close
+
+		profitOfCapitalAmount := 0
+		if position.tradeType == "SELL" {
+			profitOfCapitalAmount = GetTotalProfitAmount(closePrice, entryPrice, initCapital)
+		} else {
+			profitOfCapitalAmount = GetTotalProfitAmount(entryPrice, closePrice, initCapital)
+		}
+
+		position.SetExitTime(exitTime)
+		position.SetIsOpen(false)
+		position.SetProfitAmount(profitOfCapitalAmount)
+
+		log(`CLOSE ---> ${profit}`, profitOfCapitalAmount)
+
+		context.trades = append(context.trades, *position)
+
+		refreshVariables()
 	}
 
 	enterPosition := func(tradeType TradeType) {
+		position = &Position{
+			tradeType:    tradeType, // default is buy by default
+			entryPrice:   currentBar.close,
+			entryTime:    currentBar.date,
+			exitTime:     time.Time{},
+			profit:       0,
+			profitAmount: 0,
+			profitPct:    0,
+			isOpen:       true,
+		}
 	}
 
 	finishTrading := func() BacktestContext {
@@ -115,4 +149,5 @@ func (args Backtest) backtest() {
 	// ... logic here
 
 	// return nil
+	return finishTrading()
 }

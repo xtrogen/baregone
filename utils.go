@@ -31,3 +31,14 @@ type BacktestContext struct {
 func GetPercentageGain(startPrice int, endPrice int) int {
 	return (endPrice - startPrice) / startPrice * 100
 }
+
+/**
+ * GetTotalProfitAmount, from start and end
+ * @param start
+ * @param end
+ * @param capital
+ */
+func GetTotalProfitAmount(start int, end int, capital int) int {
+	profit := end - start
+	return (profit / start) * capital
+}

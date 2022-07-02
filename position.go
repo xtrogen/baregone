@@ -72,6 +72,10 @@ func (p *Position) SetProfitPct(profitPct int) {
 	p.profitPct = profitPct
 }
 
+func (p *Position) SetIsOpen(isOpen bool) {
+	p.isOpen = isOpen
+}
+
 func (p *Position) IsOpen() bool {
 	return p.isOpen
 }

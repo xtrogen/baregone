@@ -32,7 +32,3 @@ type Strategy struct {
 	analysePosition AnalysePosition
 	onMarketTick    OnMarketTick
 }
-
-// func (BackTestParams backtest) runStrategy() BacktestContext {
-
-// }
